@@ -1,0 +1,14 @@
+---
+- hosts: master
+  become: true
+  become_user: celeguim
+  gather_facts: no
+  tasks:
+  - shell: kubectl get nodes -o wide
+    name: kubectl get nodes -o wide
+  - shell: kubectl get pods -n kube-system -o wide
+    name: kubectl get pods -n kube-system -o wide
+  - shell: kubelet --version
+    name: kubelet --version
+  - name: kubeadm version
+    shell: kubeadm version

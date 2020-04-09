@@ -1,0 +1,120 @@
+- hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: hostname is set
+      hostname: name={{ inventory_hostname }}
+
+    - name: create the 'centos' user
+      user: name=centos append=yes state=present createhome=yes shell=/bin/bash
+
+    - name: allow 'centos' to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        line: 'centos ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: set up authorized keys for the centos user
+      authorized_key: user=centos key="{{item}}"
+      with_file:
+        - ~/.ssh/id_rsa.pub
+
+    - name: copy hosts
+      copy:
+        src: hosts.template
+        dest: /etc/hosts
+        force: yes
+        owner: root
+
+    - name: copy route for 10.96.0.0/16
+      copy:
+        src: route.template
+        dest: /etc/sysconfig/network-scripts/route-enp0s8
+        force: yes
+        owner: root
+      when: 1==1
+
+    - name: Remove swapfile from /etc/fstab
+      mount:
+        name: "{{ item }}"
+        fstype: swap
+        state: absent
+      with_items:
+        - swap
+        - none
+
+    - name: Disable swap
+      command: swapoff -a
+
+    - name: SELinux is stopped
+      command: setenforce 0
+      ignore_errors: true
+
+    - name: SELinux is disabled
+      selinux:
+        state: disabled
+
+    - name: Load br_netfilter module
+      modprobe:
+        name: br_netfilter
+        state: present
+      register: br_netfilter
+
+    - name: update iptables
+      sysctl:
+        name: "{{ item }}"
+        state: present
+        value: "1"
+        reload: yes
+      with_items:
+        - net.bridge.bridge-nf-call-ip6tables
+        - net.bridge.bridge-nf-call-iptables
+      when: br_netfilter is defined
+
+    - name: ensure net.ipv4.ip_forward is set to 1
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: Firewall is disabled
+      service:
+        name: firewalld
+        state: stopped
+        enabled: false
+
+    - name: Restart Network
+      service: name=network state=restarted
+      when: 1==1
+
+    - name: chrony is present
+      yum:
+        name: chrony
+        state: present
+        update_cache: true
+
+    - name: chronyd is started and enabled
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+
+    - name: Set timezone to Asia/Tokyo
+      timezone:
+        name: Europe/Brussels
+
+# /etc/environment
+# LANG=en_US.utf-8
+# LC_ALL=en_US.utf-8
+
+# static route permanent
+# echo "10.96.0.0/16 dev enp0s3" > /etc/sysconfig/network-scripts/route-enp0s8
+# nmcli connection modify "enp0s3" +ipv4.routes "10.96.0.0/16 192.168.56.1"
+# nmcli connection reload
+# nmcli connection up enp0s3
+# /etc/sysconfig/network-scripts/route-enp0s3
+# ADDRESS0=10.96.0.0
+# NETMASK0=255.255.0.0
+# GATEWAY0=192.168.56.1

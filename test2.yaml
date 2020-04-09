@@ -1,0 +1,22 @@
+---
+- hosts: workers
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: Load br_netfilter module
+    modprobe:
+      name: br_netfilter
+      state: present
+    register: br_netfilter
+
+  - name: update iptables
+    sysctl:
+      name: "{{ item }}"
+      state: present
+      value: "1"
+      reload: yes
+      # sysctl_file: /etc/sysctl.d/bridge-nf-call.conf
+    with_items:
+      - net.bridge.bridge-nf-call-ip6tables
+      - net.bridge.bridge-nf-call-iptables
+    when: br_netfilter is defined

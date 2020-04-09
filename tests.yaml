@@ -1,0 +1,27 @@
+---
+- hosts: k8s-master
+  become: yes
+  tasks:
+  - name: packages are absent
+    yum:
+      name:
+        - kubelet
+        - kubeadm
+        - kubectl
+      state: absent
+      update_cache: true
+
+  - name: delete folders
+    file:
+      path:
+        - /var/lib/kubelet/
+        - /var/lib/etcd/
+        - /etc/kubernetes
+        - /etc/systemd/system/multi-user.target.wants/kubelet.service
+        - $HOME/.kube
+      state: absent
+
+  - name: Del Kubernetes YUM repository
+    yum_repository:
+      name: kubernetes
+      state: absent

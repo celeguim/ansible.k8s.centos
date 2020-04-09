@@ -1,0 +1,11 @@
+ansible-playbook -i hosts uninstall.yaml -vv
+
+ansible-playbook -i hosts centos-initial.yaml -vv
+
+ansible-playbook -i hosts k8s-dependencies.yaml -vv
+
+ansible-playbook -i hosts k8s-master.yaml -vv
+
+ansible-playbook -i hosts k8s-nodes.yaml -vv
+
+ansible-playbook -i hosts k8s-test.yaml -vvv

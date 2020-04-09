@@ -1,0 +1,23 @@
+---
+- name: test package is installed
+  hosts: masters
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: check kubelet-1.17.2-0.x86_64 is installed
+    yum:
+      list=kubelet-1.17.2-0.x86_64
+    register: pkg
+
+  - debug: var=pkg.results[0].yumstate
+    when: pkg.results[0].yumstate != 'installed'
+
+  - name: packages are absent
+    yum:
+      name:
+        - kubelet
+        - kubeadm
+        - kubectl
+      state: absent
+      update_cache: true
+    when: 1==2

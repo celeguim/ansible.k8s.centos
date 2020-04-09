@@ -1,0 +1,32 @@
+- hosts: all
+  become: yes
+  become_user: root
+  remote_user: celeguim
+  become_method: sudo
+  gather_facts: false
+  tasks:
+  - name: reset kubeadm
+    shell: yes | kubeadm reset
+    # ignore_errors: true
+
+  - name: packages are absent
+    yum:
+      name:
+        - docker
+        - docker-common
+        - docker-client
+        - kubelet
+        - kubeadm
+        - kubectl
+      state: absent
+      update_cache: true
+  - name: delete folders
+    file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+        - /var/lib/kubelet/
+        - /var/lib/etcd/
+        - /etc/kubernetes
+        - /etc/systemd/system/multi-user.target.wants/kubelet.service
+        - /home/celeguim/.kube

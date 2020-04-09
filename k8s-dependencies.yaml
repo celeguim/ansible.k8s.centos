@@ -1,0 +1,56 @@
+- hosts: all
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: check kubelet-1.17.2-0.x86_64 is installed
+    yum:
+      list=kubelet-1.17.2-0.x86_64
+    register: pkg
+
+  - name: all packages are updated
+    yum:
+      name: '*'
+      state: latest
+    when: pkg.results[0].yumstate != 'installed'
+
+  - name: docker is present
+    yum:
+      name: docker
+      state: present
+      update_cache: true
+
+  - name: docker is started and enabled
+    service:
+      name: docker
+      state: started
+      enabled: yes
+
+  - name: kubernetes repository is present
+    yum_repository:
+      name: kubernetes
+      description: Kubernetes YUM repository
+      baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+      gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+      gpgcheck: yes
+      state: present
+
+  - name: kubelet is installed
+    yum:
+      name: kubelet-1.17.2-0.x86_64
+      state: present
+
+  - name: kubeadm is installed
+    yum:
+      name: kubeadm-1.17.2-0.x86_64
+      state: present
+
+  - shell: kubelet --version
+
+- hosts: master
+  become: yes
+  gather_facts: no
+  tasks:
+   - name: kubectl is present
+     yum:
+        name: kubectl-1.17.2-0.x86_64
+        state: present

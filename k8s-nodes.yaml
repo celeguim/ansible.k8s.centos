@@ -1,0 +1,17 @@
+---
+- hosts: workers
+  become: true
+  gather_facts: no
+  tasks:
+  - name: kubelet is restarted
+    service:
+      name: kubelet
+      daemon_reload: yes
+      state: restarted
+      enabled: yes
+
+  - name: join command is copied from local server
+    copy: src=join-command dest=/tmp/join-command.sh mode=0777
+
+  - name: join-command.sh is executed to join the cluster
+    command: sh /tmp/join-command.sh
