@@ -19,7 +19,7 @@ node3 ansible_host=192.168.56.104
 
 - Copy SSH keys to these servers
 
-- Take the playbook-plan.txt as a guid and voi-lá
+- Take the playbook-plan.txt as a guide and voi-lá
 
 ansible-playbook -i hosts centos-initial.yaml -vv
 
