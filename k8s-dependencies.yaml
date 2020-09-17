@@ -1,23 +1,30 @@
 - hosts: all
   become: yes
   gather_facts: no
+  vars:
+    k8s_version: "1.19.1-0.x86_64"
+
   tasks:
-  - name: check kubelet-1.17.2-0.x86_64 is installed
+  - name: check if kubelet is installed
     yum:
-      list=kubelet-1.17.2-0.x86_64
+      list=kubelet-{{ k8s_version }}
     register: pkg
 
   - name: all packages are updated
     yum:
       name: '*'
       state: latest
-    when: pkg.results[0].yumstate != 'installed'
 
-  - name: docker is present
+  - name: docker-ce repo is present
+    get_url:
+      url: https://download.docker.com/linux/centos/docker-ce.repo
+      dest: /etc/yum.repos.d/docker-ce.repo
+      mode: 0644
+
+  - name: docker-ce is installed
     yum:
-      name: docker
+      name: docker-ce
       state: present
-      update_cache: true
 
   - name: docker is started and enabled
     service:
@@ -28,29 +35,33 @@
   - name: kubernetes repository is present
     yum_repository:
       name: kubernetes
-      description: Kubernetes YUM repository
+      description: Kubernetes repo
       baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
       gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+      enabled: yes
       gpgcheck: yes
       state: present
 
   - name: kubelet is installed
     yum:
-      name: kubelet-1.17.2-0.x86_64
+      name: kubelet-{{ k8s_version }}
       state: present
 
   - name: kubeadm is installed
     yum:
-      name: kubeadm-1.17.2-0.x86_64
+      name: kubeadm-{{ k8s_version }}
       state: present
 
   - shell: kubelet --version
 
-- hosts: master
+- hosts: masters
   become: yes
   gather_facts: no
+  vars:
+    k8s_version: "1.19.1-0.x86_64"
+
   tasks:
    - name: kubectl is present
      yum:
-        name: kubectl-1.17.2-0.x86_64
+        name: kubectl-{{ k8s_version }}
         state: present

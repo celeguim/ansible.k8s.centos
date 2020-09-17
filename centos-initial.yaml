@@ -1,12 +1,18 @@
 - hosts: all
   become: yes
   gather_facts: no
+
   tasks:
     - name: hostname is set
       hostname: name={{ inventory_hostname }}
 
-    - name: create the 'centos' user
-      user: name=centos append=yes state=present createhome=yes shell=/bin/bash
+    - name: user centos is created
+      user:
+        name: centos
+        append: yes
+        state: present
+        createhome: yes
+        shell: /bin/bash
 
     - name: allow 'centos' to have passwordless sudo
       lineinfile:
@@ -46,9 +52,9 @@
     - name: Disable swap
       command: swapoff -a
 
-    - name: SELinux is stopped
-      command: setenforce 0
-      ignore_errors: true
+    - name: SELinux is disabled
+      selinux:
+        state: disabled
 
     - name: SELinux is disabled
       selinux:
@@ -86,8 +92,9 @@
         enabled: false
 
     - name: Restart Network
-      service: name=network state=restarted
-      when: 1==1
+      service:
+        name: network
+        state: restarted
 
     - name: chrony is present
       yum:
@@ -101,7 +108,7 @@
         state: started
         enabled: yes
 
-    - name: Set timezone to Asia/Tokyo
+    - name: Set timezone to Europe/Brussels
       timezone:
         name: Europe/Brussels
 

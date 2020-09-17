@@ -1,9 +1,7 @@
 - hosts: all
   become: yes
-  become_user: root
-  remote_user: celeguim
-  become_method: sudo
   gather_facts: false
+
   tasks:
   - name: reset kubeadm
     shell: yes | kubeadm reset
@@ -20,6 +18,7 @@
         - kubectl
       state: absent
       update_cache: true
+
   - name: delete folders
     file:
       path: "{{ item }}"
@@ -30,3 +29,6 @@
         - /etc/kubernetes
         - /etc/systemd/system/multi-user.target.wants/kubelet.service
         - /home/celeguim/.kube
+        - /etc/systemd/system/kubelet.service.d
+        - /etc/cni/
+

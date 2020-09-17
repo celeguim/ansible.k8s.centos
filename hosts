@@ -1,7 +1,5 @@
 [masters]
-master ansible_host=192.168.56.101
+k8s-master ansible_host=centos7-2.celeguim.cloudns.cl
 
 [workers]
-node1 ansible_host=192.168.56.102
-node2 ansible_host=192.168.56.103
-node3 ansible_host=192.168.56.104
+k8s-node1 ansible_host=centos7-3.celeguim.cloudns.cl
